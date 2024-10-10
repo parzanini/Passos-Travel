@@ -65,7 +65,7 @@
 	<div
 		class="bg-gray-100 text-gray-800 snap-y snap-mandatory overflow-y-scroll h-screen">
 		<!-- Header Section -->
-		<header class="bg-[#34446C] p-2 md:p-4 lg:sticky lg:top-0 z-40">
+		<header class="bg-[#34446C] p-2 md:p-4 md:sticky md:top-0 z-40">
 			<div
 				class="container mx-auto flex flex-wrap justify-between items-center">
 				<div class="flex items-center mb-2 sm:mb-0">
@@ -123,28 +123,29 @@
 		<main>
 			<!-- Welcome Section -->
 			<section
-				class="snap-start min-h-screen sm:py-2 py-3 md:py-12 px-3 md:px-4 flex items-center">
+				class="snap-start min-h-screen py-1 md:py-12 px-3 md:px-4 flex items-center">
 				<div class="container mx-auto">
-					<h1 class="text-3xl md:text-5xl font-bold text-center mb-1 md:mb-4">
+					<h1 class="text-3xl md:text-5xl font-bold text-center mb-3 md:mb-4">
 						Welcome to Passos Travel!
 					</h1>
-					<h2 class="text-xl font-semibold mb-4 text-center lg:text-2xl">
+					<h2
+						class="text-xl font-semibold mb-3 md:mb-4 text-center lg:text-2xl">
 						Turning your travel dreams into reality!
 					</h2>
 					<div class="flex flex-wrap items-center">
-						<div class="w-full lg:w-2/5 mb-1 md:mb-8 lg:mb-0">
-							<p class="md:mb-3 md:mx-4 mb-1 mx-2 lg:text-xl">
+						<div class="w-full lg:w-2/5 mb-4 md:mb-8 lg:mb-0">
+							<p class="md:mb-3 md:mx-4 mb-1 mx-2 md:text-xl">
 								At Passos Travel, we offer airfares, hotels, and travel packages
 								for all your needs. Our mission is to provide the best travel
 								experience with comfort, safety, and competitive prices.
 							</p>
-							<p class="md:mb-3 md:mx-4 mb-1 mx-2 lg:text-xl">
+							<p class="md:mb-3 md:mx-4 mb-4 mx-2 md:text-xl">
 								We connect you to the best destinations with competitive rates
 								and flexible options. Find the ideal hotel for your stay, from
 								guesthouses to resorts. We create tailor-made packages,
 								combining flights, hotels, and unique experiences.
 							</p>
-							<p class="md:mb-3 md:mx-4 mb-1 mx-2 lg:text-xl">
+							<p class="md:mb-3 md:mx-4 mb-4 mx-2 md:text-xl">
 								Travel well with us and discover how easy it is to explore the
 								world!
 							</p>
@@ -389,16 +390,14 @@
 	}
 
 	/* Disable snap scrolling on mobile devices */
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		.snap-y {
 			scroll-snap-type: none;
 		}
 		.snap-start {
 			scroll-snap-align: none;
 		}
-		.min-h-screen {
-			min-height: auto;
-		}
+
 		.mobile-one-row {
 			height: 3em; /* Approximate height of one row */
 		}
