@@ -12,12 +12,12 @@ const router = createRouter({
       component: HomeView
     },
     {
-      path: '/PT',
+      path: '/portuguese',
       name: 'HomeView-Pt',
       component: HomeViewPt
     },
     {
-      path: '/ES',
+      path: '/spanish',
       name: 'HomeView-Es',
       component: HomeViewEs     
 

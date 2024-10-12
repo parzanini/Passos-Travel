@@ -6,6 +6,10 @@ export default {
   ],
   theme: {
     extend: {
+      minHeight: {
+        'screen-3/4': '75vh',
+      },
+      
        colors: {
                 primary: 'rgb(var(--primary))',
                 'primary-inverse': 'rgb(var(--primary-inverse))',
