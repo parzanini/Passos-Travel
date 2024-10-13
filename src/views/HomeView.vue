@@ -1,39 +1,60 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import InputText from 'primevue/inputtext'
-import Calendar from 'primevue/calendar'
-import Button from 'primevue/button'
-import Textarea from 'primevue/textarea'
-import Dialog from 'primevue/dialog'
-import emailjs from '@emailjs/browser'
+	import { ref, onMounted, watch } from "vue";
+	import { useRoute, useRouter } from "vue-router";
+	import InputText from "primevue/inputtext";
+	import Calendar from "primevue/calendar";
+	import Button from "primevue/button";
+	import Textarea from "primevue/textarea";
+	import Dialog from "primevue/dialog";
+	import emailjs from "@emailjs/browser";
 
-const route = useRoute()
-const router = useRouter()
+	const route = useRoute();
+	const router = useRouter();
 
-const currentLanguage = ref(route.params.lang || 'en')
-const content = ref({})
+	const currentLanguage = ref(route.params.lang || "en");
+	const content = ref({});
+	const formLabels = ref({
+		name: "",
+		email: "",
+		phone: "",
+		dates: "",
+		dreamTrip: "",
+		sendButton: "",
+	});
+	
 
-const loadLanguageData = async (lang) => {
+	const loadLanguageData = async (lang) => {
   try {
-    const module = await import(`@/langData/${lang}.js`)
-    content.value = module.default[lang]
-  } catch (error) {
-    console.error('Failed to load language data:', error)
-    content.value = {} // Set to empty object in case of error
-	console.log('Error loading language data:', error)
-  } 
+    const module = await import(`@/langData/${lang}.js`);
+    content.value = module.default[lang];
+    // Populate form labels specifically
+    formLabels.value = {
+	  name: content.value.formLabels.name,
+	  email: content.value.formLabels.email,
+	  phone: content.value.formLabels.phone,
+	  dates: content.value.formLabels.dates,
+	  dreamTrip: content.value.formLabels.dreamTrip,
+	  sendButton: content.value.sendButton,
+    };
   
-}
+  } catch (error) {
+    console.error("Failed to load language data:", error);
+    content.value = {}; // Set to empty object in case of error
+   
+  }
+};
 
-watch(() => route.params.lang, (newLang) => {
-  currentLanguage.value = newLang
-  loadLanguageData(newLang)
-})
+	watch(
+		() => route.params.lang,
+		(newLang) => {
+			currentLanguage.value = newLang;
+			loadLanguageData(newLang);
+		}
+	);
 
-const changeLanguage = (lang) => {
-  router.push(`/${lang}`)
-}
+	const changeLanguage = (lang) => {
+		router.push(`/${lang}`);
+	};
 
 	// Refs for form, dialog, and form data
 	const formRef = ref(null);
@@ -86,13 +107,14 @@ const changeLanguage = (lang) => {
 		script.setAttribute("data-use-service-core", "");
 		script.defer = true;
 		document.head.appendChild(script);
-		loadLanguageData(currentLanguage.value)
+		loadLanguageData(currentLanguage.value);
 	});
-
 </script>
 
 <template>
-  <div class="bg-gray-100 text-gray-800 snap-y snap-mandatory overflow-y-scroll h-dvh">
+
+	<div
+		class="bg-gray-100 text-gray-800 snap-y snap-mandatory overflow-y-scroll h-dvh">
 		<section class="snap-start min-h-dvh flex flex-col flex-wrap">
 			<!-- Header Section -->
 			<div class="bg-[#34446C] p-2 md:p-4 w-full">
@@ -145,9 +167,27 @@ const changeLanguage = (lang) => {
 							><i class="pi pi-whatsapp text-2xl"></i
 						></a>
 
-						<a href="#" @click.prevent="changeLanguage('en')" class="text-white mx-2" aria-label="Switch to English">English</a>
-						<a href="#" @click.prevent="changeLanguage('pt')" class="text-white mx-2" aria-label="Mudar para Português">Português</a>
-						<a href="#" @click.prevent="changeLanguage('es')" class="text-white mx-2" aria-label="Cambiar a Español">Español</a>
+						<a
+							href="#"
+							@click.prevent="changeLanguage('en')"
+							class="text-white mx-2"
+							aria-label="Switch to English"
+							>English</a
+						>
+						<a
+							href="#"
+							@click.prevent="changeLanguage('pt')"
+							class="text-white mx-2"
+							aria-label="Mudar para Português"
+							>Português</a
+						>
+						<a
+							href="#"
+							@click.prevent="changeLanguage('es')"
+							class="text-white mx-2"
+							aria-label="Cambiar a Español"
+							>Español</a
+						>
 					</div>
 				</div>
 			</div>
@@ -168,7 +208,10 @@ const changeLanguage = (lang) => {
 				</div>
 				<div class="lg:flex lg:flex-row lg:items-center lg:p-8">
 					<div class="lg:w-2/5 mb-4 md:mb-8 lg:mb-0">
-						<p v-for="(paragraph, index) in content.description" :key="index" class="md:mb-3 md:mx-4 mb-4 mx-2 md:text-xl">
+						<p
+							v-for="(paragraph, index) in content.description"
+							:key="index"
+							class="md:mb-3 md:mx-4 mb-4 mx-2 md:text-xl">
 							{{ paragraph }}
 						</p>
 					</div>
@@ -217,7 +260,7 @@ const changeLanguage = (lang) => {
 									<label
 										class="block text-white text-sm mb-1"
 										for="nome"
-										>{{ content.name }}</label
+										>{{ formLabels.name }}</label
 									>
 									<InputText
 										id="nome"
@@ -230,7 +273,7 @@ const changeLanguage = (lang) => {
 									<label
 										class="block text-white text-sm mb-1"
 										for="email"
-										>{{ content.email }}</label
+										>{{ formLabels.email }}</label
 									>
 									<InputText
 										id="email"
@@ -243,7 +286,7 @@ const changeLanguage = (lang) => {
 									<label
 										class="block text-white text-sm mb-1"
 										for="telefone"
-										>{{ content.phone }}</label
+										>{{ formLabels.phone }}</label
 									>
 									<InputText
 										id="telefone"
@@ -256,7 +299,7 @@ const changeLanguage = (lang) => {
 									<label
 										class="block text-white text-sm mb-1"
 										for="dates"
-										>{{ content.dates }}</label
+										>{{ formLabels.dates }}</label
 									>
 									<Calendar
 										id="dates"
@@ -271,7 +314,7 @@ const changeLanguage = (lang) => {
 									<label
 										class="block text-white text-sm mb-1"
 										for="dream_trip"
-										>{{ content.dreamTrip }}</label
+										>{{ formLabels.dreamTrip }}</label
 									>
 									<Textarea
 										id="dream_trip"
@@ -282,7 +325,7 @@ const changeLanguage = (lang) => {
 								</div>
 								<div class="md:col-span-2">
 									<Button
-										:label="content.sendButton"
+										:label="formLabels.sendButton"
 										type="submit"
 										class="w-full text-sm" />
 								</div>
