@@ -1,11 +1,39 @@
 <script setup>
-	import InputText from "primevue/inputtext";
-	import Calendar from "primevue/calendar";
-	import Button from "primevue/button";
-	import Textarea from "primevue/textarea";
-	import Dialog from "primevue/dialog";
-	import emailjs from "@emailjs/browser";
-	import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import InputText from 'primevue/inputtext'
+import Calendar from 'primevue/calendar'
+import Button from 'primevue/button'
+import Textarea from 'primevue/textarea'
+import Dialog from 'primevue/dialog'
+import emailjs from '@emailjs/browser'
+
+const route = useRoute()
+const router = useRouter()
+
+const currentLanguage = ref(route.params.lang || 'en')
+const content = ref({})
+
+const loadLanguageData = async (lang) => {
+  try {
+    const module = await import(`@/langData/${lang}.js`)
+    content.value = module.default[lang]
+  } catch (error) {
+    console.error('Failed to load language data:', error)
+    content.value = {} // Set to empty object in case of error
+	console.log('Error loading language data:', error)
+  } 
+  
+}
+
+watch(() => route.params.lang, (newLang) => {
+  currentLanguage.value = newLang
+  loadLanguageData(newLang)
+})
+
+const changeLanguage = (lang) => {
+  router.push(`/${lang}`)
+}
 
 	// Refs for form, dialog, and form data
 	const formRef = ref(null);
@@ -58,12 +86,13 @@
 		script.setAttribute("data-use-service-core", "");
 		script.defer = true;
 		document.head.appendChild(script);
+		loadLanguageData(currentLanguage.value)
 	});
+
 </script>
 
 <template>
-	<div
-		class="bg-gray-100 text-gray-800 snap-y snap-mandatory overflow-y-scroll h-dvh">
+  <div class="bg-gray-100 text-gray-800 snap-y snap-mandatory overflow-y-scroll h-dvh">
 		<section class="snap-start min-h-dvh flex flex-col flex-wrap">
 			<!-- Header Section -->
 			<div class="bg-[#34446C] p-2 md:p-4 w-full">
@@ -116,18 +145,9 @@
 							><i class="pi pi-whatsapp text-2xl"></i
 						></a>
 
-						<a
-							href="/portuguese"
-							class="text-white mx-2"
-							aria-label="Ir para a página em Português"
-							>Portuguese</a
-						>
-						<a
-							href="/spanish"
-							class="text-white mx-2"
-							aria-label="Ir a la página en Español"
-							>Spanish</a
-						>
+						<a href="#" @click.prevent="changeLanguage('en')" class="text-white mx-2" aria-label="Switch to English">English</a>
+						<a href="#" @click.prevent="changeLanguage('pt')" class="text-white mx-2" aria-label="Mudar para Português">Português</a>
+						<a href="#" @click.prevent="changeLanguage('es')" class="text-white mx-2" aria-label="Cambiar a Español">Español</a>
 					</div>
 				</div>
 			</div>
@@ -137,31 +157,19 @@
 				<div>
 					<h1
 						class="text-3xl md:text-5xl font-bold text-center mb-3 md:mb-4 lg:p-4">
-						Welcome to Passos Travel!
+						{{ content.title }}
 					</h1>
 				</div>
 				<div>
 					<h2
 						class="text-xl font-semibold mb-3 md:mb-4 text-center md:text-3xl lg:p-4">
-						Turning your travel dreams into reality!
+						{{ content.subtitle }}
 					</h2>
 				</div>
 				<div class="lg:flex lg:flex-row lg:items-center lg:p-8">
 					<div class="lg:w-2/5 mb-4 md:mb-8 lg:mb-0">
-						<p class="md:mb-3 md:mx-4 mb-4 mx-2 md:text-xl">
-							At Passos Travel, we offer airfares, hotels, and travel packages
-							for all your needs. Our mission is to provide the best travel
-							experience with comfort, safety, and competitive prices.
-						</p>
-						<p class="md:mb-3 md:mx-4 mb-4 mx-2 md:text-xl">
-							We connect you to the best destinations with competitive rates and
-							flexible options. Find the ideal hotel for your stay, from
-							guesthouses to resorts. We create tailor-made packages, combining
-							flights, hotels, and unique experiences.
-						</p>
-						<p class="md:mb-3 md:mx-4 mb-4 mx-2 md:text-xl">
-							Travel well with us and discover how easy it is to explore the
-							world!
+						<p v-for="(paragraph, index) in content.description" :key="index" class="md:mb-3 md:mx-4 mb-4 mx-2 md:text-xl">
+							{{ paragraph }}
 						</p>
 					</div>
 					<div class="lg:w-3/5 lg:flex lg:justify-center">
@@ -183,16 +191,13 @@
 				<div class="flex flex-wrap mx-4">
 					<div class="w-full lg:w-1/3 px-4 md:mb-8 mb-2 lg:mb-0">
 						<h2 class="text-2xl font-semibold mb-4 text-center lg:text-left">
-							Get in touch with us to plan your next trip!
+							{{ content.contactTitle }}
 						</h2>
 						<p class="mb-4 md:text-xl">
-							We are excited to help you plan your next trip. Fill out the form
-							and we will get in touch with you soon.
+							{{ content.contactDescription }}
 						</p>
 						<p class="hidden md:block md:text-xl">
-							If you prefer, contact us by phone or Whatsapp. We are available
-							to answer all your questions and help you find the best travel
-							option for you.
+							{{ content.contactAlternative }}
 						</p>
 						<img
 							src="/images/contact_us.gif"
@@ -212,7 +217,7 @@
 									<label
 										class="block text-white text-sm mb-1"
 										for="nome"
-										>Name: *</label
+										>{{ content.name }}</label
 									>
 									<InputText
 										id="nome"
@@ -225,7 +230,7 @@
 									<label
 										class="block text-white text-sm mb-1"
 										for="email"
-										>Email: *</label
+										>{{ content.email }}</label
 									>
 									<InputText
 										id="email"
@@ -238,7 +243,7 @@
 									<label
 										class="block text-white text-sm mb-1"
 										for="telefone"
-										>Phone: *</label
+										>{{ content.phone }}</label
 									>
 									<InputText
 										id="telefone"
@@ -251,7 +256,7 @@
 									<label
 										class="block text-white text-sm mb-1"
 										for="dates"
-										>What dates are you thinking?</label
+										>{{ content.dates }}</label
 									>
 									<Calendar
 										id="dates"
@@ -266,7 +271,7 @@
 									<label
 										class="block text-white text-sm mb-1"
 										for="dream_trip"
-										>Describe your dream trip!</label
+										>{{ content.dreamTrip }}</label
 									>
 									<Textarea
 										id="dream_trip"
@@ -277,7 +282,7 @@
 								</div>
 								<div class="md:col-span-2">
 									<Button
-										label="Send"
+										:label="content.sendButton"
 										type="submit"
 										class="w-full text-sm" />
 								</div>
@@ -293,7 +298,7 @@
 			class="snap-start min-h-dvh flex flex-col justify-between bg-gray-100">
 			<div class="container mx-auto py-4 px-4 lg:pt-8 my-16">
 				<h2 class="text-2xl font-semibold mb-8 text-center">
-					Testimonials from our customers
+					{{ content.testimonialTitle }}
 				</h2>
 				<!-- Elfsight app for testimonials -->
 				<div
@@ -306,7 +311,7 @@
 				<div class="container mx-auto px-4">
 					<div class="w-full sm:w-auto mb-4 sm:mb-2 text-center">
 						<h3 class="font-semibold">Passos Travel</h3>
-						<p class="text-sm font-semibold">Turning dreams into trips!</p>
+						<p class="text-sm font-semibold">{{ content.footerText }}</p>
 					</div>
 					<div class="flex flex-wrap justify-between items-center text-sm">
 						<div class="w-full sm:w-auto mb-2 sm:mb-0 flex justify-center">
