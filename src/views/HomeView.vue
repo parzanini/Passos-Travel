@@ -11,7 +11,7 @@
 	const route = useRoute();
 	const router = useRouter();
 
-	const currentLanguage = ref(route.params.lang || "en");
+	const currentLanguage = ref(route.params.lang || 'en');
 	const content = ref({});
 	const formLabels = ref({
 		name: "",
@@ -47,13 +47,17 @@
 	watch(
 		() => route.params.lang,
 		(newLang) => {
-			currentLanguage.value = newLang;
-			loadLanguageData(newLang);
+			currentLanguage.value = newLang || 'en';
+			loadLanguageData(currentLanguage.value);
 		}
 	);
 
 	const changeLanguage = (lang) => {
-		router.push(`/${lang}`);
+		if (lang === 'en') {
+			router.push('/');
+		} else {
+			router.push(`/${lang}`);
+		}
 	};
 
 	// Refs for form, dialog, and form data
