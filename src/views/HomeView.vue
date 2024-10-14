@@ -1,5 +1,5 @@
 <script setup>
-	import { ref, onMounted, watch } from "vue";
+	import { ref, onMounted, watch, computed } from "vue";
 	import { useRoute, useRouter } from "vue-router";
 	import InputText from "primevue/inputtext";
 	import Calendar from "primevue/calendar";
@@ -60,8 +60,7 @@
 		}
 	};
 
-	// Refs for form, dialog, and form data
-	const formRef = ref(null);
+	// Refs for dialog and form data
 	const showDialog = ref(false);
 	const dialogMessage = ref("");
 	const dialogTitle = ref("");
@@ -71,16 +70,70 @@
 		user_name: "",
 		user_email: "",
 		user_phone: "",
-		travel_dates: "",
+		travel_dates: null,
 		dream_trip: "",
+	});
+
+	const errors = ref({});
+
+	const validateForm = () => {
+		errors.value = {};
+
+		if (!formData.value.user_name.trim()) {
+			errors.value.user_name = "Name is required";
+		}
+
+		if (!formData.value.user_email.trim()) {
+			errors.value.user_email = "Email is required";
+		} else if (!/\S+@\S+\.\S+/.test(formData.value.user_email)) {
+			errors.value.user_email = "Email is invalid";
+		}
+
+		if (!formData.value.user_phone.trim()) {
+			errors.value.user_phone = "Phone is required";
+		}
+
+		if (!formData.value.travel_dates) {
+			errors.value.travel_dates = "Travel dates are required";
+		}
+
+		if (!formData.value.dream_trip.trim()) {
+			errors.value.dream_trip = "Dream trip description is required";
+		}
+
+		return Object.keys(errors.value).length === 0;
+	};
+
+	const formattedDates = computed(() => {
+		if (!formData.value.travel_dates) return "";
+		const formatDate = (date) => {
+			return date.toLocaleDateString('en-US', {
+				year: 'numeric',
+				month: '2-digit',
+				day: '2-digit'
+			});
+		};
+		if (Array.isArray(formData.value.travel_dates)) {
+			return formData.value.travel_dates.map(formatDate).join(' to ');
+		} else {
+			return formatDate(formData.value.travel_dates);
+		}
 	});
 
 	// Function to send email using EmailJS
 	const sendEmail = () => {
+		if (!validateForm()) {
+			return; // Stop if validation fails
+		}
+
 		emailjs
-			.sendForm("service_hxo2n6e", "template_goc225a", formRef.value, {
-				publicKey: "oTqhsu3S1LKieQE3C",
-			})
+			.send("service_hxo2n6e", "template_goc225a", {
+				user_name: formData.value.user_name,
+				user_email: formData.value.user_email,
+				user_phone: formData.value.user_phone,
+				travel_dates: formattedDates.value,
+				dream_trip: formData.value.dream_trip
+			}, "oTqhsu3S1LKieQE3C")
 			.then(
 				() => {
 					// Success handling
@@ -90,7 +143,7 @@
 					showDialog.value = true;
 					// Reset form data after successful submission
 					Object.keys(formData.value).forEach(
-						(key) => (formData.value[key] = "")
+						(key) => (formData.value[key] = key === 'travel_dates' ? null : "")
 					);
 				},
 				(error) => {
@@ -176,28 +229,28 @@
 							@click.prevent="changeLanguage('en')"
 							class="text-white mx-2"
 							aria-label="Switch to English"
-							>English</a
+							>EN</a
 						>
 						<a
 							href="#"
 							@click.prevent="changeLanguage('pt')"
 							class="text-white mx-2"
 							aria-label="Mudar para Português"
-							>Português</a
+							>PT</a
 						>
 						<a
 							href="#"
 							@click.prevent="changeLanguage('es')"
 							class="text-white mx-2"
 							aria-label="Cambiar a Español"
-							>Español</a
+							>ES</a
 						>
 					</div>
 				</div>
 			</div>
 
 			<div
-				class="mx-auto md:mx-6 px-3 md:px-4 flex flex-col justify-around min-h-screen-3/4">
+				class="mx-auto my-auto md:mx-6 px-3 md:px-4 flex flex-col justify-around min-h-screen-3/4">
 				<div>
 					<h1
 						class="text-3xl md:text-5xl font-bold text-center mb-3 md:mb-4 lg:p-4">
@@ -246,17 +299,20 @@
 						<p class="hidden md:block md:text-xl">
 							{{ content.contactAlternative }}
 						</p>
-						<img
-							src="/images/contact_us.gif"
+						<video
+							src="/images/contact_us.webm"
 							alt="Contact us illustration"
 							class="rounded-3xl md:p-4 md:max-w-full hidden lg:block"
 							width="400"
-							height="300" />
+							height="300"
+							autoplay
+							muted
+							loop
+						></video>
 					</div>
 					<div class="w-full lg:w-2/3 md:px-4">
 						<form
 							class="bg-[#34446C] p-4 md:p-6 rounded-lg max-w-md mx-auto lg:max-w-none"
-							ref="formRef"
 							@submit.prevent="sendEmail"
 							aria-label="Contact form">
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -268,10 +324,11 @@
 									>
 									<InputText
 										id="nome"
-										name="user_name"
 										v-model="formData.user_name"
 										class="w-full text-sm"
+										:class="{ 'p-invalid': errors.user_name }"
 										aria-required="true" />
+									<small class="p-error" v-if="errors.user_name">{{ errors.user_name }}</small>
 								</div>
 								<div>
 									<label
@@ -281,10 +338,11 @@
 									>
 									<InputText
 										id="email"
-										name="user_email"
 										v-model="formData.user_email"
 										class="w-full text-sm"
+										:class="{ 'p-invalid': errors.user_email }"
 										aria-required="true" />
+									<small class="p-error" v-if="errors.user_email">{{ errors.user_email }}</small>
 								</div>
 								<div>
 									<label
@@ -294,10 +352,11 @@
 									>
 									<InputText
 										id="telefone"
-										name="user_phone"
 										v-model="formData.user_phone"
 										class="w-full text-sm"
+										:class="{ 'p-invalid': errors.user_phone }"
 										aria-required="true" />
+									<small class="p-error" v-if="errors.user_phone">{{ errors.user_phone }}</small>
 								</div>
 								<div class="md:col-span-2">
 									<label
@@ -307,12 +366,13 @@
 									>
 									<Calendar
 										id="dates"
-										name="travel_dates"
 										v-model="formData.travel_dates"
 										selectionMode="range"
 										:manualInput="false"
 										showIcon
-										class="w-full text-sm" />
+										class="w-full text-sm"
+										:class="{ 'p-invalid': errors.travel_dates }" />
+									<small class="p-error" v-if="errors.travel_dates">{{ errors.travel_dates }}</small>
 								</div>
 								<div class="md:col-span-2">
 									<label
@@ -322,10 +382,11 @@
 									>
 									<Textarea
 										id="dream_trip"
-										name="dream_trip"
 										v-model="formData.dream_trip"
 										class="w-full text-sm md:mobile-one-row"
+										:class="{ 'p-invalid': errors.dream_trip }"
 										rows="3" />
+									<small class="p-error" v-if="errors.dream_trip">{{ errors.dream_trip }}</small>
 								</div>
 								<div class="md:col-span-2">
 									<Button
@@ -342,8 +403,8 @@
 
 		<!-- Testimonials Section with Footer -->
 		<section
-			class="snap-start min-h-dvh flex flex-col justify-between bg-gray-100">
-			<div class="container mx-auto py-4 px-4 lg:pt-8 my-16">
+			class="snap-start min-h-dvh flex flex-col justify-between bg-gray-100 my-auto">
+			<div class="container mx-auto md:py-4 px-4 lg:pt-8 my-8">
 				<h2 class="text-2xl font-semibold mb-8 text-center">
 					{{ content.testimonialTitle }}
 				</h2>
@@ -354,7 +415,7 @@
 			</div>
 
 			<!-- Footer Section -->
-			<footer class="bg-[#34446C] text-white py-4">
+			<footer class="bg-[#34446C] text-white py-2">
 				<div class="container mx-auto px-4">
 					<div class="w-full sm:w-auto mb-4 sm:mb-2 text-center">
 						<h3 class="font-semibold">Passos Travel</h3>
@@ -370,7 +431,7 @@
 								<img
 									src="/images/cadastur.webp"
 									alt="Cadastur Logo"
-									class="h-16 mr-4 rounded-full"
+									class="h-14 md:h-16 md:mr-4 rounded-full"
 									width="128"
 									height="64" />
 							</a>
@@ -381,7 +442,7 @@
 							<p class="text-xs">Email: passostravel@gmail.com</p>
 							<p class="text-xs">Tel: 11 4637-5629</p>
 						</div>
-						<div class="w-full sm:w-auto flex justify-center sm:justify-end">
+						<div class="w-full sm:w-auto flex justify-center ">
 							<a
 								href="https://www.facebook.com/profile.php?id=61563997826241"
 								target="_blank"
@@ -455,5 +516,13 @@
 	}
 	.mobile-one-row {
 		height: 3em; /* Approximate height of one row */
+	}
+	.p-error {
+		color: #ef4444;
+		font-size: 0.875rem;
+	}
+
+	.p-invalid {
+		border-color: #ef4444 !important;
 	}
 </style>
