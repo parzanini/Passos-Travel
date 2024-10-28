@@ -303,10 +303,16 @@ onMounted(() => {
           <div class="lg:w-3/5 lg:flex lg:justify-center">
             <img
               src="/images/design.webp"
+              srcset="
+                /images/design-small.webp   400w,
+                /images/design-medium.webp  800w,
+                /images/design.webp        1200w
+              "
+              sizes="(max-width: 800px) 100vw, 800px"
               alt="Travel destinations collage"
               class="rounded-3xl md:p-4 p-2 max-w-full"
-              width="800"
-              height="400"
+              width="900"
+              height="450"
             />
           </div>
         </div>
