@@ -183,18 +183,10 @@ const sendEmail = () => {
 };
 
 onMounted(() => {
-  // Existing Elfsight script
-  const elfsightScript = document.createElement("script");
-  elfsightScript.src = "https://static.elfsight.com/platform/platform.js";
-  elfsightScript.defer = true;
-  document.head.appendChild(elfsightScript);
-
-  // Trustpilot script
-  const trustpilotScript = document.createElement("script");
-  trustpilotScript.src =
-    "//widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js";
-  trustpilotScript.async = true;
-  document.head.appendChild(trustpilotScript);
+  // Add the widget script
+  const widgetScript = document.createElement("script");
+  widgetScript.src = "https://cdn.fouita.com/widgets/0x1a4c2a.js";
+  document.head.appendChild(widgetScript);
 
   loadLanguageData(currentLanguage.value);
 });
@@ -456,30 +448,8 @@ onMounted(() => {
         <h2 class="text-2xl font-semibold mb-8 text-center">
           {{ content.testimonialTitle }}
         </h2>
-        <!-- Elfsight app for testimonials -->
-        <div
-          class="elfsight-app-823ac1e7-a04f-4819-95f2-6ef6d6e7b833"
-          data-elfsight-app-lazy
-        ></div>
+        <div data-key="All-in-one Reviews Grid" class="ft" id="ftf20f18u"></div>
       </div>
-      <!-- TrustBox widget - Review Collector -->
-      <div
-        class="trustpilot-widget p-3"
-        data-locale="en-US"
-        data-template-id="56278e9abfbbba0bdcd568bc"
-        data-businessunit-id="6706b0ee101647bcdbfd7fa7"
-        data-style-height="52px"
-        data-style-width="100%"
-      >
-        <a
-          href="https://www.trustpilot.com/review/passostravel.com"
-          target="_blank"
-          rel="noopener"
-          >Trustpilot</a
-        >
-      </div>
-      <!-- End TrustBox widget -->
-
       <!-- Footer Section -->
       <footer class="bg-[#34446C] text-white py-2">
         <div class="container mx-auto px-4">
