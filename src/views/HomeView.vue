@@ -74,6 +74,21 @@ const formData = ref({
 
 const errors = ref({});
 
+// Form security: honeypot + minimum interaction time + optional hCaptcha.
+// hCaptcha is opt-in: only activates when VITE_HCAPTCHA_SITE_KEY is set
+// AND hCaptcha is configured in the EmailJS dashboard.
+const honeypot = ref("");
+const formStartTime = ref(null);
+const MIN_FORM_TIME_MS = 3000;
+const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY || "";
+const hcaptchaToken = ref(null);
+
+const trackFormStart = () => {
+  if (!formStartTime.value) {
+    formStartTime.value = Date.now();
+  }
+};
+
 const validateForm = () => {
   errors.value = {};
   const v = content.value.validation || {};
@@ -120,23 +135,49 @@ const formattedDates = computed(() => {
 });
 
 const sendEmail = () => {
+  const d = content.value.dialog || {};
+  const v = content.value.validation || {};
+
+  // Honeypot: bots fill hidden fields. Silent-fail so we don't tip them off.
+  if (honeypot.value) {
+    return;
+  }
+
+  // Time guard: real users take longer than MIN_FORM_TIME_MS to fill the form.
+  const elapsed = formStartTime.value ? Date.now() - formStartTime.value : 0;
+  if (elapsed < MIN_FORM_TIME_MS) {
+    return;
+  }
+
+  // hCaptcha: required only when configured. Surface a friendly error.
+  if (HCAPTCHA_SITE_KEY && !hcaptchaToken.value) {
+    dialogTitle.value = d.errorTitle;
+    dialogMessage.value = v.captchaRequired || "Please complete the captcha.";
+    showDialog.value = true;
+    return;
+  }
+
   if (!validateForm()) {
     return;
   }
 
-  const d = content.value.dialog || {};
+  const params = {
+    user_name: formData.value.user_name,
+    user_email: formData.value.user_email,
+    user_phone: formData.value.user_phone,
+    travel_dates: formattedDates.value,
+    dream_trip: formData.value.dream_trip,
+  };
+  if (hcaptchaToken.value) {
+    // EmailJS expects the captcha token under this key for both reCAPTCHA and hCaptcha.
+    params["g-recaptcha-response"] = hcaptchaToken.value;
+  }
 
   emailjs
     .send(
       import.meta.env.VITE_EMAILJS_SERVICE_ID,
       import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-      {
-        user_name: formData.value.user_name,
-        user_email: formData.value.user_email,
-        user_phone: formData.value.user_phone,
-        travel_dates: formattedDates.value,
-        dream_trip: formData.value.dream_trip,
-      },
+      params,
       import.meta.env.VITE_EMAILJS_PUBLIC_KEY
     )
     .then(
@@ -147,6 +188,12 @@ const sendEmail = () => {
         Object.keys(formData.value).forEach(
           (key) => (formData.value[key] = key === "travel_dates" ? null : "")
         );
+        // Reset captcha + interaction tracking for the next submission
+        hcaptchaToken.value = null;
+        formStartTime.value = null;
+        if (HCAPTCHA_SITE_KEY && window.hcaptcha) {
+          window.hcaptcha.reset();
+        }
       },
       () => {
         dialogTitle.value = d.errorTitle;
@@ -157,10 +204,28 @@ const sendEmail = () => {
 };
 
 onMounted(() => {
-  // Add the widget script
+  // Reviews widget (Fouita)
   const widgetScript = document.createElement("script");
   widgetScript.src = "https://cdn.fouita.com/widgets/0x1a4c2a.js";
+  widgetScript.async = true;
+  widgetScript.defer = true;
   document.head.appendChild(widgetScript);
+
+  // hCaptcha: load only when configured
+  if (HCAPTCHA_SITE_KEY) {
+    const hcap = document.createElement("script");
+    hcap.src = "https://js.hcaptcha.com/1/api.js";
+    hcap.async = true;
+    hcap.defer = true;
+    document.head.appendChild(hcap);
+    // Global callbacks invoked by the hCaptcha widget
+    window.onHCaptchaSuccess = (token) => {
+      hcaptchaToken.value = token;
+    };
+    window.onHCaptchaExpired = () => {
+      hcaptchaToken.value = null;
+    };
+  }
 
   loadLanguageData(currentLanguage.value);
 });
@@ -316,10 +381,29 @@ onMounted(() => {
           </div>
           <div class="w-full lg:w-2/3 md:px-4">
             <form
-              class="bg-[#34446C] p-4 md:p-6 rounded-lg max-w-md mx-auto lg:max-w-none"
+              class="bg-[#34446C] p-4 md:p-6 rounded-lg max-w-md mx-auto lg:max-w-none relative"
               @submit.prevent="sendEmail"
+              @input="trackFormStart"
+              @focusin="trackFormStart"
               aria-label="Contact form"
+              novalidate
             >
+              <!-- Honeypot: hidden from humans, bots fill it. Do not remove. -->
+              <div
+                aria-hidden="true"
+                class="overflow-hidden"
+                style="position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px;"
+              >
+                <label for="company">Do not fill this field</label>
+                <input
+                  id="company"
+                  type="text"
+                  v-model="honeypot"
+                  name="company"
+                  tabindex="-1"
+                  autocomplete="off"
+                />
+              </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="md:col-span-2">
                   <label class="block text-white text-sm mb-1" for="nome">{{
@@ -399,6 +483,19 @@ onMounted(() => {
                   <small class="p-error" v-if="errors.dream_trip">{{
                     errors.dream_trip
                   }}</small>
+                </div>
+                <!-- hCaptcha widget: renders only when VITE_HCAPTCHA_SITE_KEY is set -->
+                <div
+                  v-if="HCAPTCHA_SITE_KEY"
+                  class="md:col-span-2 flex justify-center"
+                >
+                  <div
+                    class="h-captcha"
+                    :data-sitekey="HCAPTCHA_SITE_KEY"
+                    data-callback="onHCaptchaSuccess"
+                    data-expired-callback="onHCaptchaExpired"
+                    data-theme="dark"
+                  ></div>
                 </div>
                 <div class="md:col-span-2">
                   <Button

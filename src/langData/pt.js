@@ -24,6 +24,7 @@ export default {
       phoneRequired: "Telefone é obrigatório",
       datesRequired: "Datas da viagem são obrigatórias",
       dreamTripRequired: "Descrição da viagem dos sonhos é obrigatória",
+      captchaRequired: "Por favor complete o captcha",
     },
     dialog: {
       successTitle: "Sucesso!",

@@ -58,7 +58,7 @@ Tests will live in `tests/` (Vitest unit + Playwright e2e). Not yet wired up.
   - LGPD compliance: explicit consent, retention policy, right-to-delete endpoint, DPO contact in privacy policy. LGPD applies because the agency operates in Brazil.
   - Argon2id (not bcrypt) for password hashing.
   - Sessions in httpOnly + Secure + SameSite=Lax cookies. **Never store tokens in localStorage.**
-- **Form spam**: the public contact form needs a captcha (Cloudflare Turnstile planned) + honeypot field before any rate-sensitive integrations are added.
+- **Form spam**: the contact form ships with three layers — (1) honeypot field (hidden input named `company`; silent-fail when populated), (2) submit-rate guard (silent-fail if < 3s since first interaction), (3) optional hCaptcha widget that activates only when `VITE_HCAPTCHA_SITE_KEY` is set AND hCaptcha is configured in the EmailJS dashboard. The guard logic lives in `sendEmail` in `src/views/HomeView.vue`. Without a backend, hCaptcha is the only layer with real server-side validation (EmailJS validates it before sending).
 - **External scripts**: third-party JS (Fouita widget, etc.) is loaded with `defer` or in `onMounted`. Never add new third-party `<script>` tags to `index.html` without auditing the source.
 - **Headers**: production responses should set CSP, HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy. Configured via `.htaccess` on Hostinger.
 - **Dependencies**: run `npm audit` before merging. New deps need a one-line justification in the PR description.
