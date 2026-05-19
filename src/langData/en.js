@@ -5,7 +5,7 @@ export default {
     description: [
       "At Passos Travel, we offer airfares, hotels, and travel packages for all your needs. Our mission is to provide the best travel experience with comfort, safety, and competitive prices.",
       "We connect you to the best destinations with competitive rates and flexible options. Find the ideal hotel for your stay, from guesthouses to resorts. We create tailor-made packages, combining flights, hotels, and unique experiences.",
-      "Travel well with us and discover how easy it is to explore the world!"
+      "Travel well with us and discover how easy it is to explore the world!",
     ],
     contactTitle: "Get in touch with us to plan your next trip!",
     contactDescription: "We are excited to help you plan your next trip. Fill out the form and we will get in touch with you soon.",
@@ -15,10 +15,24 @@ export default {
       email: "Email: *",
       phone: "Phone: *",
       dates: "What dates are you thinking?",
-      dreamTrip: "Describe your dream trip!"
+      dreamTrip: "Describe your dream trip!",
+    },
+    validation: {
+      nameRequired: "Name is required",
+      emailRequired: "Email is required",
+      emailInvalid: "Email is invalid",
+      phoneRequired: "Phone is required",
+      datesRequired: "Travel dates are required",
+      dreamTripRequired: "Dream trip description is required",
+    },
+    dialog: {
+      successTitle: "Success!",
+      successMessage: "Message sent successfully! We appreciate your contact. Our team will get in touch with you soon to discuss your dream trip.",
+      errorTitle: "Error",
+      errorMessage: "Sorry, something went wrong. Please try again later or contact us directly.",
     },
     sendButton: "Send",
     testimonialTitle: "Testimonials from our customers",
     footerText: "Turning dreams into trips!",
-  }
-}
+  },
+};

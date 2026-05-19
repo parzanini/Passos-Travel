@@ -1,25 +1,3 @@
-// HomeView.vue // // This component represents the home view of the Passos
-Travel website. It includes various sections such as the header, main content,
-contact form, testimonials, and footer. // // Features: // - Language selection
-and dynamic content loading based on the selected language. // - Contact form
-with validation and email sending functionality using EmailJS. // - Integration
-with Elfsight and Trustpilot for testimonials and reviews. // // Dependencies:
-// - Vue.js: Core framework. // - PrimeVue: UI components (InputText, Calendar,
-Button, Textarea, Dialog). // - Vue Router: For navigation and route handling.
-// - EmailJS: For sending emails. // // Sections: // - Header: Contains the
-logo, contact information, social media links, and language switcher. // - Main
-Content: Displays the title, subtitle, description, and an image. // - Contact
-Form: Allows users to send their contact information and travel details. // -
-Testimonials: Displays testimonials using Elfsight and Trustpilot widgets. // -
-Footer: Contains additional contact information and social media links. // //
-Methods: // - loadLanguageData: Loads language-specific content from external
-files. // - changeLanguage: Changes the current language and updates the route.
-// - validateForm: Validates the contact form fields. // - sendEmail: Sends the
-contact form data via EmailJS. // // Lifecycle Hooks: // - onMounted: Loads the
-initial language data and appends external scripts for Elfsight and Trustpilot.
-// // Computed Properties: // - formattedDates: Formats the selected travel
-dates for display. // // Watchers: // - route.params.lang: Watches for changes
-in the language parameter and reloads the language data accordingly.
 <script setup>
 import { ref, onMounted, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -98,27 +76,28 @@ const errors = ref({});
 
 const validateForm = () => {
   errors.value = {};
+  const v = content.value.validation || {};
 
   if (!formData.value.user_name.trim()) {
-    errors.value.user_name = "Name is required";
+    errors.value.user_name = v.nameRequired;
   }
 
   if (!formData.value.user_email.trim()) {
-    errors.value.user_email = "Email is required";
+    errors.value.user_email = v.emailRequired;
   } else if (!/\S+@\S+\.\S+/.test(formData.value.user_email)) {
-    errors.value.user_email = "Email is invalid";
+    errors.value.user_email = v.emailInvalid;
   }
 
   if (!formData.value.user_phone.trim()) {
-    errors.value.user_phone = "Phone is required";
+    errors.value.user_phone = v.phoneRequired;
   }
 
   if (!formData.value.travel_dates) {
-    errors.value.travel_dates = "Travel dates are required";
+    errors.value.travel_dates = v.datesRequired;
   }
 
   if (!formData.value.dream_trip.trim()) {
-    errors.value.dream_trip = "Dream trip description is required";
+    errors.value.dream_trip = v.dreamTripRequired;
   }
 
   return Object.keys(errors.value).length === 0;
@@ -140,16 +119,17 @@ const formattedDates = computed(() => {
   }
 });
 
-// Function to send email using EmailJS
 const sendEmail = () => {
   if (!validateForm()) {
-    return; // Stop if validation fails
+    return;
   }
+
+  const d = content.value.dialog || {};
 
   emailjs
     .send(
-      "service_hxo2n6e",
-      "template_goc225a",
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
       {
         user_name: formData.value.user_name,
         user_email: formData.value.user_email,
@@ -157,26 +137,20 @@ const sendEmail = () => {
         travel_dates: formattedDates.value,
         dream_trip: formData.value.dream_trip,
       },
-      "oTqhsu3S1LKieQE3C"
+      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
     )
     .then(
       () => {
-        // Success handling
-        dialogTitle.value = "Success!";
-        dialogMessage.value =
-          "Message sent successfully! We appreciate your contact. Our team will get in touch with you soon to discuss your dream trip.";
+        dialogTitle.value = d.successTitle;
+        dialogMessage.value = d.successMessage;
         showDialog.value = true;
-        // Reset form data after successful submission
         Object.keys(formData.value).forEach(
           (key) => (formData.value[key] = key === "travel_dates" ? null : "")
         );
       },
-      (error) => {
-        // Error handling
-        console.log("FAILED...", error.text);
-        dialogTitle.value = "Error";
-        dialogMessage.value =
-          "Sorry, something went wrong. Please try again later or contact us directly.";
+      () => {
+        dialogTitle.value = d.errorTitle;
+        dialogMessage.value = d.errorMessage;
         showDialog.value = true;
       }
     );
@@ -193,7 +167,7 @@ onMounted(() => {
 </script>
 <template>
   <div
-    class="bg-gray-100 text-gray-800 snap-y snap-mandatory overflow-y-scroll h-dvh"
+    class="bg-gray-100 text-gray-800 snap-y snap-proximity overflow-y-scroll h-dvh"
   >
     <section class="snap-start min-h-dvh flex flex-col flex-wrap">
       <!-- Header Section -->
@@ -542,10 +516,6 @@ html,
 body {
   scroll-behavior: smooth;
   overscroll-behavior-y: contain;
-}
-
-.snap-y {
-  scroll-snap-type: y mandatory;
 }
 
 .snap-start {
